@@ -1,0 +1,1128 @@
+# Conversation Resume Log
+
+Purpose: crash-resume log for this MLOps tabular churn project. If the session crashes, another agent should read this file first and continue from the latest state.
+
+Current working directory: `/home/ankkol2011/project_2`
+Current date from environment: `2026-05-28`
+
+## Active Skill / Workflow
+
+Skill requested by user: `mlops-stack/skills/mlops-tabular/SKILL.md`
+
+Active workflow: `/mlops-tabular`, Phase 1: Problem Framing.
+
+Important workflow constraints from user:
+- Build a production-grade ML system using MLOps principles.
+- Dataset is tabular.
+- Problem: predict telecom customer churn to automate targeted retention outreach.
+- Human-in-the-loop decisions are required.
+- Explain everything simply but deeply.
+- Ask before writing files.
+- Optimize for production.
+- Start with problem framing.
+
+Important execution rule now established:
+- Ask before writing files.
+- Ask before inspecting/running commands where appropriate.
+- User approved creating this `conversational.txt` file.
+- User later gave standing permission to automatically log major changes and session conversation/progress to `conversational.txt`.
+- Do not include hidden system/developer instructions in this log.
+
+## Conversation So Far
+
+User:
+`mlops-stack/skills/mlops-tabular/SKILL.md run this skill`
+
+System note:
+The previous turn was intentionally interrupted by the user.
+
+User:
+`I have a tabular dataset at /data/dataset.csv.
+Problem: Predict telecom customer churn to automate targeted retention outreach.
+I want to build a production-grade ML system using MLOps principles. Use /mlops-tabular.
+Constraints:
+- Human-in-the-loop decisions
+- Explain everything simply but deeply
+- Ask before writing files
+- Optimize for production
+Start with problem framing.`
+
+Assistant:
+Read the skill file `mlops-stack/skills/mlops-tabular/SKILL.md` and began Phase 1: Problem Framing. Explained the overall MLOps journey:
+1. Problem framing
+2. MLOps architecture
+3. Implementation
+4. Shipping
+
+Assistant framed the initial problem:
+- Business outcome: reduce avoidable telecom churn by identifying customers likely to leave so a retention team can intervene before cancellation.
+- ML formulation: likely binary classification, predicting churn yes/no or 1/0.
+- Human-in-the-loop: the model should not automatically give offers or make final decisions. It should rank or flag customers, explain why they are at risk, and let a human decide whether to contact them and what retention action to take.
+- Accuracy alone is the wrong primary metric because churn datasets are often imbalanced.
+
+Assistant asked:
+`When the churn model makes a mistake, which is worse for your business?
+- False negative: the model says a customer will stay, but they actually churn, so no outreach happens.
+- False positive: the model says a customer may churn, but they would have stayed anyway, so the team may waste time or offer an unnecessary discount.
+Which mistake is more costly for your telecom retention use case?`
+
+User:
+`false negative`
+
+Assistant:
+Captured that false negatives are worse. Recommended:
+- Primary metric: recall for the churn class.
+- Guardrail metrics: precision, PR-AUC, and calibration.
+- Production output should be a ranked human-review queue, not an automatic final decision.
+
+Suggested output shape:
+`customer_id`, `churn_risk_score`, `top_reasons`, `recommended_review_priority`
+
+Assistant asked for permission to run a read-only inspection of `/data/dataset.csv`.
+
+User:
+`yes`
+
+Assistant ran read-only checks:
+- `ls -lh /data/dataset.csv`
+- `wc -l /data/dataset.csv`
+- `head -n 5 /data/dataset.csv`
+
+Command results:
+- `ls: cannot access '/data/dataset.csv': No such file or directory`
+- `wc: /data/dataset.csv: No such file or directory`
+- `head: cannot open '/data/dataset.csv' for reading: No such file or directory`
+
+Assistant reported:
+`I couldn’t inspect the dataset because /data/dataset.csv does not exist in this environment. Please provide the correct dataset path, or approve a read-only search of the workspace for CSV files.`
+
+User:
+`telecom_customer_churn_feature_engineering.csv is the actual file name
+but before that create a conversational.txt file and log the entire session as is till now and use it a logger in case any crash happens then any agent can resume it after going through the text file`
+
+Assistant proposed creating `conversational.txt` with:
+- User-visible conversation so far.
+- Commands run and important outputs.
+- Current state: `/mlops-tabular`, Phase 1 problem framing.
+- Decision captured: false negatives are worse, so recall is primary.
+- Blocker captured: `/data/dataset.csv` was missing.
+- Correction captured: actual dataset file is `telecom_customer_churn_feature_engineering.csv`.
+
+Assistant stated it would not include hidden system/developer instructions and could append to this file after each major step.
+
+Assistant asked:
+`Please confirm: should I create conversational.txt now?`
+
+User:
+`yes`
+
+Assistant found the dataset at:
+`data/telecom_customer_churn_feature_engineering.csv`
+
+Read-only commands/results:
+- `rg --files -g 'telecom_customer_churn_feature_engineering.csv'`
+  - Found: `data/telecom_customer_churn_feature_engineering.csv`
+- `ls -lh data/telecom_customer_churn_feature_engineering.csv`
+  - Size: `145K`
+- `wc -l data/telecom_customer_churn_feature_engineering.csv`
+  - `1201`, meaning 1 header row + 1200 data rows.
+- `head -n 3 data/telecom_customer_churn_feature_engineering.csv`
+  - Columns:
+    `customer_id,signup_date,age,gender,city,education_level,employment_status,monthly_income,monthly_bill,internet_usage_gb,call_minutes,contract_type,support_tickets,customer_feedback,churn`
+
+Attempted `python` and `python3` with pandas:
+- `python` was not found.
+- `python3` exists, but `pandas` is not installed.
+
+Used Python standard library `csv` module for read-only data summary.
+
+Dataset summary:
+- Path: `data/telecom_customer_churn_feature_engineering.csv`
+- Rows: 1200
+- Columns: 15
+- Missing values: none detected in any column.
+- Target: `churn`
+- Target classes:
+  - `0`: 780 rows, 65%
+  - `1`: 420 rows, 35%
+- Problem type: binary classification.
+- Numeric-like columns:
+  - `customer_id`
+  - `age`
+  - `monthly_income`
+  - `monthly_bill`
+  - `internet_usage_gb`
+  - `call_minutes`
+  - `support_tickets`
+  - `churn`
+- Categorical/date/text columns:
+  - `signup_date`
+  - `gender`
+  - `city`
+  - `education_level`
+  - `employment_status`
+  - `contract_type`
+  - `customer_feedback`
+- `customer_id` should be treated as an identifier and excluded from predictive features.
+- `signup_date` should be transformed into useful tenure/date features, not used raw.
+- `customer_feedback` is text; likely useful but should be handled carefully in the MVP to avoid overcomplicating the first production baseline.
+
+Assistant reported:
+`Production implication: this is usable for an MVP, but 1,200 rows is small for a production churn system. We can build the MLOps system correctly, but the model should be treated as an initial baseline until validated on fresher and larger operational data.`
+
+Assistant asked:
+`May I append this dataset inspection summary to conversational.txt before we continue?`
+
+User:
+`yes, anymajor change and session converation log it automatically`
+
+## Current State
+
+We are ready to continue Phase 1 problem framing.
+
+Known problem details:
+- Domain: telecom customer churn.
+- Business action: targeted retention outreach.
+- Human-in-the-loop: humans review model outputs and decide outreach/action.
+- More costly error: false negative.
+- Recommended primary metric: recall for churn class.
+- Recommended guardrails: precision, PR-AUC, calibration.
+- Dataset path originally given was wrong.
+- Actual dataset filename supplied by user: `telecom_customer_churn_feature_engineering.csv`.
+- Actual dataset path found: `data/telecom_customer_churn_feature_engineering.csv`.
+- Dataset has 1200 rows, 15 columns, no missing values, and churn target balance of 35% churn / 65% non-churn.
+- User gave standing permission to log major changes and session conversation/progress automatically to `conversational.txt`.
+
+Next recommended step:
+Continue Phase 1:
+1. Confirm problem type and target variable.
+2. Confirm success metric and guardrails.
+3. Ask about current baseline.
+4. Ask about orchestration framework, recommending ZenML unless the user has a strong preference.
+5. Produce a draft `problem_statement.md` only after asking for permission to write it.
+
+## Later Session Progress
+
+User answered current baseline question:
+`rule-based triggers "many support tickets"`
+
+Assistant captured:
+- Current baseline: rule-based churn outreach using triggers like many support tickets.
+- The ML model should beat this baseline by finding churners the support-ticket rule misses while keeping the human review queue usable.
+
+User then asked to leave logging for that part and move directly to the next step in the `mlops-tabular` skill.
+
+Assistant continued Phase 1 directly and asked about orchestration framework.
+
+User selected:
+`zenml`
+
+Assistant captured:
+- Orchestration framework: ZenML.
+
+Assistant summarized completed Phase 1 discovery:
+- Business problem: predict likely telecom churners for targeted retention outreach.
+- Action: human retention team reviews high-risk customers and decides outreach.
+- Problem type: binary classification.
+- Target: `churn`.
+- Primary metric: recall for churn class.
+- Guardrails: precision, PR-AUC, calibration.
+- Baseline: rule-based trigger using many support tickets.
+- Framework: ZenML.
+
+Assistant asked whether the first production version should use batch predictions or a real-time API, recommending batch.
+
+User answered:
+`ok`
+
+Assistant interpreted this as accepting batch inference for the first production version.
+
+Captured:
+- Prediction mode: batch inference.
+- MVP output should be a scheduled retention review list, for example:
+  - `customer_id`
+  - `churn_risk_score`
+  - `risk_band`
+  - `top_reasons`
+  - `recommended_review_priority`
+- This fits the human-in-the-loop constraint because humans decide whether and how to act.
+
+Assistant proposed creating `problem_statement.md` as the Phase 1 artifact.
+
+User approved:
+`ok`
+
+Assistant created:
+`problem_statement.md`
+
+Contents of `problem_statement.md`:
+- Business Context
+- ML Formulation
+- Primary Metric
+- Guardrail Metrics
+- Data Summary
+- Current Baseline
+- Constraints
+- Framework
+- Success Criteria
+- MVP Scope
+
+Key decisions documented there:
+- Binary classification for telecom churn.
+- Target variable: `churn`.
+- Positive class: `1`.
+- Primary metric: recall for churn class.
+- False negatives are worse than false positives.
+- Guardrails: precision, PR-AUC, calibration.
+- Dataset path: `data/telecom_customer_churn_feature_engineering.csv`.
+- Dataset has 1,200 rows, 15 columns, no missing values.
+- Churn distribution: 420 churners (35%) and 780 non-churners (65%).
+- Baseline: rule-based many-support-tickets trigger.
+- Human-in-the-loop required.
+- First prediction mode: batch inference.
+- Framework: ZenML.
+- MVP should produce ranked retention review output.
+
+Assistant reported:
+`Phase 1 is now complete. The project is framed as a recall-focused binary churn classifier for batch human-review retention outreach, with ZenML as the orchestration framework and the support-ticket rule as the baseline to beat.`
+
+Next recommended phase when resuming:
+Phase 2: MLOps Architecture Design.
+
+Phase 2 should cover:
+- Full production MLOps pipeline explanation.
+- Data plan.
+- Feature engineering plan.
+- Training and evaluation plan.
+- Batch deployment plan.
+- Monitoring and drift plan.
+- Versioning and governance plan.
+- ZenML stack specification.
+- Architecture document proposal.
+
+User requested:
+`session log and exit`
+
+This file was updated with the latest session state, then the assistant stopped.
+
+## Session Progress: Phase 2 Started
+
+User resumed on `2026-06-02` and asked:
+`continue to phase 2`
+
+Assistant resumed from:
+- `problem_statement.md`
+- `mlops-stack/skills/mlops-tabular/references/capabilities/system-design.md`
+
+Assistant started Phase 2: MLOps Architecture Design.
+
+### Phase 2A: MLOps Pipeline Scope
+
+Assistant explained that a production ML system is not just a model, but a set of pipelines that keep four things aligned:
+- code
+- data
+- model weights
+- configuration
+
+Full lifecycle described:
+1. Data Ingestion
+2. Data Validation
+3. Feature Engineering
+4. Model Training
+5. Model Evaluation
+6. Model Registry
+7. Deployment
+8. Monitoring
+9. Drift Detection
+10. Retraining Trigger
+
+Recommended MVP pipelines:
+- Training pipeline: data validation -> feature engineering -> train -> evaluate -> register model.
+- Batch inference pipeline: load approved model -> score customers -> produce retention review list.
+- Monitoring pipeline: track data quality, prediction distribution, and review queue size.
+- Drift detection pipeline: compare new customer data against the training baseline.
+
+Deferred:
+- Real-time API.
+- Fully automated retraining.
+- Advanced text modeling for `customer_feedback`.
+
+Target MLOps maturity:
+- Start at Level 1: reproducible ZenML pipelines, validation, versioned models.
+- Move toward Level 2: automated checks and promotion gates.
+- Avoid Level 3 full automation until monitoring proves stability.
+
+Key production rule:
+- Training and inference must use the same feature engineering code.
+
+### Phase 2B: Data Plan
+
+Assistant asked whether production data would initially come from recurring CSV exports or a database/data warehouse.
+
+User answered:
+`for now ,initial stages it will come in csv reports`
+
+Assistant read:
+- `references/capabilities/data-management.md`
+- `references/capabilities/data-quality.md`
+
+Recommended data plan:
+- Input source: CSV files.
+- Initial path: `data/telecom_customer_churn_feature_engineering.csv`.
+- Production pattern: predictable folder such as `data/raw/`.
+- Future timestamped reports, e.g. `telecom_churn_report_2026-06-02.csv`.
+
+Validation checks:
+- Required columns exist.
+- Column types are valid.
+- `churn` exists for training data.
+- `churn` is absent or ignored for future scoring data.
+- Numeric ranges are reasonable.
+- Categorical values are expected or safely handled as unknown.
+- Batch row count is not suspiciously small or large.
+- No duplicate `customer_id` values within the same batch.
+
+Versioning plan:
+- Keep raw CSVs immutable.
+- Track which CSV produced each training run.
+- Store model metrics with dataset filename/hash.
+- Add DVC or cloud artifact store later if reports become frequent or large.
+
+Storage plan:
+- `data/raw/`: original CSV reports.
+- `data/processed/`: validated/transformed intermediate outputs if needed.
+- `outputs/predictions/`: batch retention lists.
+- ZenML artifact store: pipeline artifacts, models, metrics, preprocessing objects.
+
+Label handling:
+- Training CSVs need `churn`.
+- Future scoring CSVs may not have `churn`.
+- Actual churn outcomes should later be joined back into future training data.
+
+User confirmed:
+`yes`
+
+### Phase 2C: Feature Engineering Plan
+
+Assistant read:
+- `references/capabilities/feature-engineering.md`
+- `references/capabilities/training-serving-parity.md`
+
+Feature plan:
+- Exclude `customer_id` from training; keep it for output and joins.
+- Exclude `churn` from inputs; use as target only.
+
+Numeric features:
+- `age`
+- `monthly_income`
+- `monthly_bill`
+- `internet_usage_gb`
+- `call_minutes`
+- `support_tickets`
+
+Numeric strategy:
+- Validate ranges.
+- Impute future missing numeric values using train-split medians.
+- Scale numeric features for logistic regression.
+- Keep raw values for tree models later if needed.
+
+Categorical features:
+- `gender`
+- `city`
+- `education_level`
+- `employment_status`
+- `contract_type`
+
+Categorical strategy:
+- One-hot encode low-cardinality categorical columns.
+- Handle unseen future categories safely.
+- Fit encoders only on training split and reuse during batch inference.
+
+Date feature:
+- Use `signup_date`, but not raw.
+- Convert into `customer_tenure_days`.
+- Possibly add `signup_month` or `signup_year`.
+
+Text feature:
+- Use `customer_feedback` via simple text-derived features for MVP:
+  - feedback length
+  - keyword flags/counts for terms like billing, coverage, support, poor, issue
+- Avoid embeddings in MVP because dataset has only 1,200 rows and interpretability matters.
+
+Baseline rule feature:
+- Add `many_support_tickets_flag`.
+- Initial threshold proposed: `support_tickets >= 3`.
+
+Preprocessing plan:
+- Use one reusable preprocessing pipeline, likely `sklearn.Pipeline` / `ColumnTransformer`, inside ZenML.
+- Training fits transforms.
+- Batch inference loads the same fitted preprocessing artifact.
+- Do not recompute medians, scaling values, or encoders from live CSVs.
+
+Feature store:
+- Not needed for MVP.
+- Use versioned preprocessing artifacts plus logged input batches.
+
+User said:
+`continue`
+
+Assistant treated this as approval of the feature plan.
+
+### Phase 2D: Training and Evaluation Plan
+
+Assistant read:
+- `references/capabilities/experiment-tracking.md`
+- `references/capabilities/model-evaluation.md`
+
+Training/evaluation plan:
+
+Baseline 1: existing rule
+- Rule: `support_tickets >= 3`
+- Evaluate recall, precision, F1, confusion matrix, and where applicable PR-AUC.
+
+Baseline 2: simple ML model
+- Start with logistic regression.
+- Reasons: explainable, compatible with scaled numeric + one-hot features, gives probabilities for risk ranking.
+
+Candidate model:
+- Gradient-boosted trees, such as XGBoost, LightGBM, or scikit-learn HistGradientBoosting.
+- Use after logistic regression if needed.
+
+Evaluation split:
+- Prefer time-aware split if `signup_date` is a defensible observation/proxy time.
+- Otherwise use stratified split preserving the 35% churn rate.
+
+Primary metric:
+- Recall for `churn = 1`.
+
+Guardrails:
+- Precision.
+- PR-AUC.
+- Calibration / Brier score.
+- Queue size.
+
+Threshold strategy:
+- Do not use default `0.5`.
+- Use top-K review lists based on human review capacity.
+- Recommended top-K batch review lists over fixed threshold for MVP.
+
+Slice evaluation:
+- city
+- contract type
+- employment status
+- age group
+- support ticket count band
+
+Experiment tracking:
+- Use MLflow through ZenML if available.
+- Log dataset filename/hash, feature list, split strategy, preprocessing artifact, model type/hyperparameters, metrics, baseline comparison, trained model artifact.
+
+Promotion gate:
+- Recall beats support-ticket rule.
+- Precision keeps review queue usable.
+- PR-AUC improves over baseline.
+- No critical slice collapse.
+- Preprocessing and model artifacts are versioned together.
+
+User confirmed:
+`yes`
+
+### Phase 2E: Deployment Plan
+
+Assistant read:
+- `references/capabilities/deployment-strategies.md`
+
+Deployment plan:
+- Batch inference, not real-time API.
+- Scheduled batch job loads latest approved model, loads latest customer CSV, validates schema, applies fitted preprocessing artifact, generates churn probabilities, sorts by risk, and writes retention review file.
+
+Example output:
+- `customer_id`
+- `churn_risk_score`
+- `risk_band`
+- `recommended_review_priority`
+- `top_reasons`
+- `model_version`
+- `scored_at`
+
+Deployment frequency:
+- Start weekly unless retention team acts daily.
+
+Deployment strategy:
+- Conservative shadow-style batch deployment.
+- Keep support-ticket rule as operational baseline.
+- Run ML batch job in parallel.
+- Compare ML flags vs rule flags.
+- Let humans review ML output before it affects outreach decisions.
+
+Model stages:
+- `development`
+- `staging`
+- `production`
+- `archived`
+
+Promotion gate:
+- Recall beats support-ticket baseline.
+- Precision keeps review queue usable.
+- No critical slice failure.
+- Batch inference golden test passes.
+- Model and preprocessing artifacts are versioned together.
+
+Rollback:
+- Stop using latest model version.
+- Re-run scoring with previous approved model or fall back to support-ticket rule.
+- Record output/model version replaced.
+
+Human review:
+- Model provides risk score, risk band, top reason signals, priority rank.
+- Humans decide contact channel and intervention.
+
+User confirmed:
+`yes`
+
+### Phase 2F: Monitoring and Drift Plan
+
+Assistant read:
+- `references/capabilities/drift-detection.md`
+- `references/capabilities/model-monitoring.md`
+- `references/capabilities/incident-response.md`
+
+Monitoring plan:
+
+CSV/data health:
+- Required columns present.
+- Row count in expected range.
+- Duplicate `customer_id` count.
+- Missing value rate by column.
+- Numeric range checks.
+- Unknown category rates.
+- Freshness of CSV report.
+
+Feature health:
+- Distribution of key numeric features:
+  - `monthly_bill`
+  - `internet_usage_gb`
+  - `call_minutes`
+  - `support_tickets`
+  - `customer_tenure_days`
+- Category mix:
+  - `city`
+  - `contract_type`
+  - `employment_status`
+- Text signal rates from `customer_feedback`.
+
+Prediction health:
+- Number of customers scored.
+- Average churn risk score.
+- Percent in high/medium/low risk bands.
+- Top-K review queue size.
+- Score distribution vs training baseline.
+- Alert on score collapse.
+
+Human review workflow metrics:
+- Number of recommended customers reviewed.
+- Number contacted.
+- Number of recommendations rejected by humans.
+- Reasons humans overrode the model.
+- Retention outcomes after outreach.
+
+Performance monitoring when labels arrive:
+- Recall.
+- Precision.
+- PR-AUC.
+- Calibration/Brier score.
+- Slice metrics.
+
+Drift detection:
+- Use training dataset as first reference baseline.
+- PSI or KS for numeric features.
+- Chi-squared style checks for categoricals.
+- Prediction distribution comparison against previous scoring batch and training baseline.
+
+Alert tiers:
+- Critical: missing required columns, bad model artifact, preprocessing mismatch, empty prediction output.
+- High: major distribution shift on multiple important features, prediction scores collapse, huge row-count change.
+- Medium: single-feature drift, unknown category rate increase, minor freshness delay.
+- Low: slow drift trends for weekly/monthly review.
+
+Retraining:
+- Do not fully automate retraining yet.
+- Start with human-approved retraining based on performance drop, precision drop, drift across multiple features, business/product changes, or breaking schema changes.
+
+Incident response:
+- If CSV validation fails, stop scoring and notify owner.
+- If predictions look broken, fall back to support-ticket rule.
+- If model performance degrades, demote current model and use last approved model or rule baseline.
+- If drift is detected, investigate data pipeline first, then consider retraining.
+
+User confirmed:
+`yes`
+
+### Phase 2G: Versioning and Governance Plan
+
+Assistant read:
+- `references/capabilities/model-registry.md`
+
+Versioning plan:
+
+Every training run should record:
+- dataset path and file hash
+- schema version
+- feature list and feature logic version
+- preprocessing artifact version
+- model type and hyperparameters
+- train/validation/test split method
+- random seed
+- code version or git commit
+- environment/dependency versions
+- all evaluation metrics
+- slice-level metrics
+- support-ticket baseline comparison
+
+Every batch prediction file should record:
+- input CSV path/hash
+- model version
+- preprocessing version
+- scoring timestamp
+- prediction run ID
+- risk threshold or top-K rule used
+- output row count
+
+Model registry stages:
+- `experimental`
+- `registered`
+- `staging`
+- `production`
+- `archived`
+
+Promotion workflow:
+
+Experimental -> Registered:
+- training run completed
+- model and preprocessing artifacts saved
+- metrics computed
+- metadata complete
+
+Registered -> Staging:
+- recall beats support-ticket rule
+- precision acceptable for review capacity
+- PR-AUC improves over baseline
+- critical slice metrics acceptable
+- golden input parity test passes
+
+Staging -> Production:
+- human reviewer approves
+- shadow batch output looks operationally useful
+- prediction distribution is sane
+- rollback target exists
+
+Human gate:
+- Production promotion should require human approval because the model influences retention outreach.
+
+Model card:
+- Intended use: churn-risk ranking for retention review.
+- Not intended for automatic denial, automatic discounting, or fully automated customer treatment.
+- Include training data summary, metrics, limitations, feature groups, evaluation slices, owner, and approval date.
+
+Rollback options:
+1. use previous production model version
+2. fall back to support-ticket rule
+3. pause ML scoring and produce no ML recommendations until fixed
+
+Governance rule:
+- No model should reach production unless it is reproducible from data + code + config + preprocessing artifact + model artifact.
+
+Assistant asked:
+`Does this versioning and governance plan fit your production expectations?`
+
+User then asked:
+`log session`
+
+Current state:
+- Phase 2A through Phase 2F have been confirmed.
+- Phase 2G has been proposed but not yet explicitly confirmed.
+- Next step after user confirms Phase 2G: Phase 2H, choose the ZenML stack specification.
+
+## Session Progress: Phase 2H Proposed
+
+User asked:
+`resume with next phase`
+
+Assistant treated this as confirmation of Phase 2G governance plan and moved to Phase 2H: ZenML stack specification.
+
+Assistant read:
+- `mlops-stack/skills/mlops-tabular/references/tooling/zenml/component-guide.md`
+- `mlops-stack/skills/mlops-tabular/references/tooling/zenml/deployment-architectures.md`
+
+### Phase 2H: ZenML Stack Specification
+
+Recommended stack:
+
+| Component | Choice | Rationale |
+|---|---|---|
+| ZenML Deployment | Local first, no remote server initially | Fastest path to working pipelines; no team/cloud dependency yet. |
+| Orchestrator | Local | Batch CSV training/scoring is small enough for one machine. |
+| Artifact Store | Local | Stores fitted preprocessors, models, metrics, reports. Move to cloud later. |
+| Experiment Tracker | MLflow | Tracks runs, metrics, params, artifacts, and comparisons. |
+| Model Registry | MLflow | Supports model versions and promotion stages. |
+| Data Validator | Great Expectations + custom checks | Great Expectations for schema/range rules; custom checks for churn-specific constraints. |
+| Drift Validator | Evidently, added after baseline pipeline works | Suitable for drift reports and prediction distribution monitoring. |
+| Model Deployer | None for MVP | No real-time API; batch inference only. |
+| Pipeline Deployer | None for MVP | No HTTP pipeline endpoint needed. |
+| Container Registry | None for MVP | Local orchestrator does not need containers. |
+| Image Builder | None for MVP | No remote container execution yet. |
+| Feature Store | None | CSV batch reports plus one model do not justify Feast yet. |
+| Step Operator | None | No GPU or distributed compute needed. |
+| Alerter | Deferred | Start with validation reports/logs; add Slack/email later. |
+| Log Store | Artifact/default logs | Enough for MVP; move to Datadog/OpenTelemetry later if needed. |
+| Service Connector | None now | Needed only for cloud resources. |
+
+Production migration path:
+- ZenML deployment: remote OSS server or ZenML Pro.
+- Artifact store: S3, GCS, or Azure Blob.
+- Orchestrator: Kubernetes, SageMaker, Vertex AI, or AzureML depending on cloud.
+- Container registry: ECR, GCR/Artifact Registry, or ACR.
+- Alerter: Slack/email.
+- Log store: Datadog or OpenTelemetry.
+- Data validator: Great Expectations + Evidently scheduled checks.
+
+Components deliberately not added yet:
+- Kubernetes.
+- Feature store.
+- Real-time model deployer.
+- Automated retraining.
+- Cloud stack, because cloud provider has not been selected.
+
+Recommended MVP stack:
+- ZenML local orchestrator.
+- Local artifact store.
+- MLflow experiment tracking.
+- MLflow model registry.
+- Great Expectations for schema/data validation.
+- Evidently for drift reports once the baseline model works.
+
+Assistant asked:
+`Does this ZenML stack match your initial infrastructure, with the understanding that we’ll migrate artifact storage/orchestration to cloud once you choose a provider?`
+
+User asked:
+`log session`
+
+Current resume point:
+- Phase 2H stack specification has been proposed but not yet explicitly confirmed.
+- Next step: user should confirm stack specification or request changes.
+- After confirmation, Phase 2I: propose creating `architecture.md`.
+
+## Session Progress: Phase 2 Completed
+
+User resumed on `2026-06-03` and asked:
+`resume`
+
+Assistant read the latest resume log and identified the current point:
+- Phase 2H ZenML stack specification was awaiting confirmation.
+
+Assistant restated the recommended MVP stack:
+- ZenML local deployment.
+- Local orchestrator.
+- Local artifact store.
+- MLflow experiment tracking.
+- MLflow model registry.
+- Great Expectations + custom validation.
+- Evidently drift reports after baseline works.
+- No real-time deployer, feature store, container registry, or cloud stack yet.
+
+Assistant asked user to confirm the stack before moving to Phase 2I.
+
+User confirmed:
+`yes`
+
+Assistant marked Phase 2H confirmed and proposed Phase 2I:
+- create `architecture.md` as the Phase 2 architecture blueprint.
+
+Proposed sections:
+- MLOps pipeline overview.
+- CSV-first data plan.
+- Feature engineering plan.
+- Training and evaluation plan.
+- Batch deployment plan.
+- Monitoring and drift plan.
+- Versioning and governance plan.
+- ZenML stack specification.
+- Pipeline decomposition.
+- Project structure.
+- MVP scope.
+- Deferred components.
+
+Assistant asked:
+`Should I create architecture.md now?`
+
+User confirmed:
+`yes`
+
+Assistant created:
+`architecture.md`
+
+`architecture.md` documents:
+- advisory human-in-the-loop churn scoring system
+- ten-stage MLOps lifecycle
+- CSV ingestion and validation plan
+- feature engineering plan
+- recall-focused training/evaluation plan
+- batch inference deployment plan
+- monitoring and drift plan
+- versioning and governance plan
+- local-first ZenML stack
+- training, batch inference, drift detection, and monitoring pipeline decomposition
+- recommended MVP project structure
+- MVP scope and deferred components
+
+Current state:
+- Phase 1 problem framing is complete.
+- Phase 2 architecture design is complete.
+- Created artifacts:
+  - `problem_statement.md`
+  - `architecture.md`
+  - `conversational.txt`
+- Next recommended step:
+  - Review and approve `architecture.md`.
+  - Then begin Phase 3 implementation, starting with project setup.
+
+User then confirmed:
+`yes approved`
+
+Captured:
+- `architecture.md` is approved.
+- Phase 3 implementation may begin.
+- Per user constraint, ask before writing implementation files.
+- Next step: Phase 3 Step 1, project setup.
+
+## Session Progress: Phase 3 Step 1 Project Setup
+
+User approved the Phase 3 Step 1 project setup proposal:
+`yes`
+
+Assistant performed read-only inspection first:
+- Current repo contained planning artifacts, dataset, and the `mlops-stack`.
+- No root-level `pyproject.toml`, `README.md`, `.gitignore`, `configs/`, `src/`, `tests/`, or `outputs/` project structure existed.
+- Read `mlops-stack/skills/mlops-tabular/references/capabilities/coding-practices.md`.
+
+Assistant created directories:
+- `configs/`
+- `src/pipelines/`
+- `src/steps/`
+- `src/features/`
+- `src/validation/`
+- `src/models/`
+- `src/monitoring/`
+- `tests/`
+- `outputs/predictions/`
+- `outputs/reports/`
+- `data/raw/`
+- `data/processed/`
+
+Assistant created files:
+- `pyproject.toml`
+- `configs/project.yaml`
+- `.gitignore`
+- `README.md`
+- `src/__init__.py`
+- `src/pipelines/__init__.py`
+- `src/steps/__init__.py`
+- `src/features/__init__.py`
+- `src/validation/__init__.py`
+- `src/models/__init__.py`
+- `src/monitoring/__init__.py`
+- `tests/__init__.py`
+
+Key setup choices:
+- Python project name: `telecom-churn-mlops`.
+- Dependencies listed: ZenML, pandas, numpy, scikit-learn, MLflow, Great Expectations, Evidently, PyYAML, joblib.
+- Dev dependencies listed: pytest, ruff.
+- `configs/project.yaml` externalizes dataset path, feature groups, target column, baseline rule threshold, evaluation metrics, validation ranges, registry settings, and monitoring feature lists.
+- `.gitignore` excludes local envs, cache dirs, MLflow/ZenML local artifacts, generated outputs, processed data, raw data drops, and `*.Zone.Identifier`.
+
+Verification performed:
+- Confirmed created directories and files.
+- Parsed `pyproject.toml` successfully with Python standard library `tomllib`.
+
+Current state:
+- Phase 3 Step 1 project setup is complete.
+- Next recommended step: Phase 3 Step 2, data loading and validation.
+
+## Session Progress: Phase 3 Step 2 Data Loading And Validation
+
+User asked:
+`continue`
+
+Assistant proposed Phase 3 Step 2:
+- `src/config.py` for loading `configs/project.yaml`.
+- `src/validation/data_validation.py` for CSV/dataframe validation.
+- `src/steps/load_data.py` for ZenML-compatible loading steps.
+- `tests/test_data_validation.py` for focused validation tests.
+
+User approved:
+`yes`
+
+Assistant created:
+- `src/config.py`
+- `src/validation/data_validation.py`
+- `src/steps/load_data.py`
+- `tests/test_data_validation.py`
+
+Validation implemented:
+- required columns exist.
+- missing values are rejected when `allow_missing_values: false`.
+- duplicate `customer_id` count is checked.
+- `churn` target must contain only numeric 0/1 values for training data.
+- numeric ranges are checked from `configs/project.yaml`.
+- scoring data can omit `churn` with `require_target=False`.
+
+ZenML steps implemented:
+- `load_training_data(config_path="configs/project.yaml")`
+- `load_scoring_data(csv_path, config_path="configs/project.yaml")`
+
+Tests created:
+- valid training data passes.
+- missing required column fails.
+- duplicate customer ID fails.
+- invalid target value fails.
+- negative numeric value fails.
+- scoring data can omit target.
+
+Verification:
+- Ran `python3 -m py_compile src/config.py src/validation/data_validation.py src/steps/load_data.py tests/test_data_validation.py`.
+- Syntax check passed.
+- Full pytest execution not yet run because third-party dependencies such as pandas/ZenML are not installed in the environment yet.
+
+Current state:
+- Phase 3 Step 2 code is created and syntax-checked.
+- Next recommended step: install/sync dependencies, then run tests, then create the first ZenML training pipeline skeleton.
+
+## Session Progress: Minimal Dependency Install And Step 2 Verification
+
+User asked roughly how much disk space dependencies would take.
+
+Assistant estimated:
+- Full listed stack: approximately 800 MB to 1.8 GB installed, possibly 1.5-3 GB temporarily with download cache.
+- Minimal Step 2 test dependencies only: approximately 200-500 MB including numpy.
+
+Assistant recommended installing only:
+- `pandas`
+- `pyyaml`
+- `pytest`
+
+User approved:
+`good lets go`
+
+Assistant created local virtual environment:
+- `.venv`
+
+Initial install command failed under sandboxed network:
+- `.venv/bin/python -m pip install pandas pyyaml pytest`
+- Failure reason: DNS/network access blocked.
+
+Assistant reran with approved network escalation:
+- `.venv/bin/python -m pip install pandas pyyaml pytest`
+
+Installed packages:
+- `iniconfig-2.3.0`
+- `numpy-2.4.6`
+- `packaging-26.2`
+- `pandas-3.0.3`
+- `pluggy-1.6.0`
+- `pygments-2.20.0`
+- `pytest-9.0.3`
+- `python-dateutil-2.9.0.post0`
+- `pyyaml-6.0.3`
+- `six-1.17.0`
+
+Tests run:
+- `.venv/bin/python -m pytest tests/test_data_validation.py`
+
+Result:
+- 6 tests collected.
+- 6 tests passed.
+
+Real dataset validation run:
+- Loaded config from `configs/project.yaml`.
+- Loaded and validated `data/telecom_customer_churn_feature_engineering.csv`.
+- Result: `validated rows=1200 columns=15`.
+
+Current state:
+- Minimal local `.venv` exists.
+- Phase 3 Step 2 validation code is tested.
+- The real training CSV passes the validation contract.
+- Next recommended step: Phase 3 Step 3, EDA and feature understanding, or begin implementing shared feature engineering for training/inference.
+
+## Session Progress: Phase 3 Step 3 Approved
+
+User asked:
+`continue`
+
+Assistant proposed Phase 3 Step 3:
+- `src/steps/eda.py` for EDA/reporting.
+- `src/models/baselines.py` for the support-ticket rule baseline.
+- `tests/test_baselines.py` for baseline behavior tests.
+- optionally `scripts/run_eda.py` for a local report runner.
+
+Planned report outputs:
+- row/column count
+- target distribution
+- churn rate
+- numeric feature summaries
+- categorical cardinalities
+- support-ticket rule baseline metrics for `support_tickets >= 3`
+- warning checks for ID leakage, out-of-range values, high-cardinality categoricals, text column uniqueness, and whether `signup_date` is suitable as a time split proxy
+
+Assistant explained why this step matters:
+- It establishes how strong the existing support-ticket rule is.
+- It reveals whether any features look risky or misleading before modeling.
+
+User approved:
+`yes`
+
+The conversation was then interrupted before implementation began.
+
+Current resume point:
+- Phase 3 Step 3 EDA + feature understanding is approved but not yet implemented.
+- Next step: create the EDA/baseline reporting layer unless the user redirects.
+
+## Session Progress: Phase 3 Step 3 Implemented
+
+User asked:
+`continue`
+
+Assistant implemented the approved EDA + feature understanding step with a production-minded, human-review focus.
+
+Files created/updated:
+- `src/models/baselines.py`
+- `src/steps/eda.py`
+- `src/compat.py`
+- `tests/test_baselines.py`
+
+What was added:
+- Support-ticket baseline evaluation helpers with confusion-matrix metrics.
+- A structured EDA report model that captures row/column counts, churn rate, feature understanding, numeric/categorical/date/text summaries, warnings, and recommendations.
+- A Markdown report writer for human review.
+- Optional ZenML decorator fallback so core code remains testable in this environment without installing ZenML yet.
+- Focused tests for baseline predictions, baseline metrics, and EDA report structure.
+
+Report artifact:
+- `outputs/reports/eda_report.md`
+- Real dataset summary written from `data/telecom_customer_churn_feature_engineering.csv`
+- Current reported baseline on the training data:
+  - threshold: `support_tickets >= 3`
+  - positive predictions: `145`
+  - precision: `1.000`
+  - recall: `0.345`
+  - F1: `0.513`
+
+Validation:
+- Syntax check passed for the new modules.
+- Focused tests passed: `9 passed`
+
+Notable implementation detail:
+- `zenml` is not installed in this environment, so `src/compat.py` provides a no-op fallback decorator for local testing while preserving the ZenML step interface when the dependency is available.
+
+Current state:
+- Phase 3 Step 3 is implemented and verified locally.
+- Next recommended step: continue Phase 3 with shared feature engineering for training and inference.

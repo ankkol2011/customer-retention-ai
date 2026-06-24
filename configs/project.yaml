@@ -1,0 +1,124 @@
+project:
+  name: telecom_customer_churn
+  problem_type: binary_classification
+  orchestration: zenml
+  prediction_mode: batch
+  human_in_the_loop: true
+
+data:
+  training_csv: data/telecom_customer_churn_feature_engineering.csv
+  raw_dir: data/raw
+  processed_dir: data/processed
+  predictions_dir: outputs/predictions
+  reports_dir: outputs/reports
+  id_column: customer_id
+  target_column: churn
+  positive_class: 1
+
+features:
+  numeric:
+    - age
+    - monthly_income
+    - monthly_bill
+    - internet_usage_gb
+    - call_minutes
+    - support_tickets
+  categorical:
+    - gender
+    - city
+    - education_level
+    - employment_status
+    - contract_type
+  date:
+    - signup_date
+  text:
+    - customer_feedback
+  derived:
+    tenure_column: customer_tenure_days
+    support_ticket_rule_column: many_support_tickets_flag
+    feedback_length_column: customer_feedback_length
+    feedback_keyword_prefix: customer_feedback_keyword
+  excluded_from_training:
+    - customer_id
+    - churn
+
+baseline:
+  rule_name: many_support_tickets
+  support_tickets_threshold: 3
+
+evaluation:
+  primary_metric: recall
+  positive_label: 1
+  guardrail_metrics:
+    - precision
+    - pr_auc
+    - brier_score
+    - review_queue_size
+  split:
+    strategy: stratified
+    test_size: 0.2
+    validation_size: 0.2
+    random_seed: 42
+  review_queue:
+    strategy: top_k
+    default_top_k: 100
+
+validation:
+  required_columns:
+    - customer_id
+    - signup_date
+    - age
+    - gender
+    - city
+    - education_level
+    - employment_status
+    - monthly_income
+    - monthly_bill
+    - internet_usage_gb
+    - call_minutes
+    - contract_type
+    - support_tickets
+    - customer_feedback
+    - churn
+  allow_missing_values: false
+  max_duplicate_customer_ids: 0
+  numeric_ranges:
+    age:
+      min: 0
+      max: 120
+    monthly_income:
+      min: 0
+    monthly_bill:
+      min: 0
+    internet_usage_gb:
+      min: 0
+    call_minutes:
+      min: 0
+    support_tickets:
+      min: 0
+
+registry:
+  experiment_tracker: mlflow
+  model_registry: mlflow
+  model_name: telecom_churn_classifier
+  stages:
+    - experimental
+    - registered
+    - staging
+    - production
+    - archived
+
+monitoring:
+  drift_reference: training_data
+  alerting_enabled: false
+  key_numeric_features:
+    - monthly_bill
+    - internet_usage_gb
+    - call_minutes
+    - support_tickets
+    - customer_tenure_days
+  key_categorical_features:
+    - city
+    - contract_type
+    - employment_status
+

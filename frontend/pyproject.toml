@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telecom-churn-frontend"
+version = "0.1.0"
+description = "Streamlit frontend for uploading CSV churn reports and viewing ranked retention scores."
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "streamlit",
+    "pandas",
+    "pyyaml",
+    "joblib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["..", "."]

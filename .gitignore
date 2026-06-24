@@ -1,0 +1,31 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.zenml/
+.agents/
+.codex/
+
+# Local MLOps artifacts
+mlruns/
+.zen/
+zenml.db
+outputs/models/*
+outputs/predictions/*
+outputs/reports/*
+data/processed/*
+
+# Keep source reports explicit; do not accidentally commit generated raw drops.
+data/raw/*
+
+# Frontend caches
+frontend/.pytest_cache/
+frontend/__pycache__/
+frontend/src/__pycache__/
+
+# OS/browser metadata
+*.Zone.Identifier
+.DS_Store

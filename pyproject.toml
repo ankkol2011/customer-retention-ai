@@ -1,0 +1,35 @@
+[project]
+name = "telecom-churn-mlops"
+version = "0.1.0"
+description = "Production-minded ZenML MLOps system for telecom customer churn batch retention outreach."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "zenml",
+    "pandas",
+    "numpy",
+    "scikit-learn",
+    "mlflow",
+    "great-expectations",
+    "evidently",
+    "pyyaml",
+    "joblib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
