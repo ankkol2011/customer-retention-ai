@@ -1,6 +1,10 @@
 # Customer Retention AI
 
-Customer Retention AI is a production-minded machine learning project for telecom churn prediction. It ranks customers by churn risk so a retention team can review the highest-risk cases and decide whether to intervene.
+Stop churn before it becomes lost revenue!
+
+Customer Retention AI gives telecom teams a ranked churn-risk queue, clear review priorities, batch scoring on CSV reports, and drift monitoring that flags when customer behavior starts to shift. It turns raw customer data into a practical retention workflow your team can act on fast.
+
+If your business is losing subscribers quietly, this project helps you find the customers most likely to leave, focus human attention where it matters, and compare the model against the rule-based process you use today.
 
 The model is advisory. It does not contact customers automatically or assign offers. Human review stays in the loop.
 
@@ -139,4 +143,3 @@ These are generated artifacts. The model bundle and scored prediction files are 
 - Core MLOps implementation: complete
 - Frontend: complete
 - GitHub-ready cleanup: complete
-
