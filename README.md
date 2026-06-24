@@ -1,75 +1,142 @@
-# Telecom Customer Churn MLOps
+# Customer Retention AI
 
-Production-minded batch ML system for telecom churn risk ranking.
+Customer Retention AI is a production-minded machine learning project for telecom churn prediction. It ranks customers by churn risk so a retention team can review the highest-risk cases and decide whether to intervene.
 
-The model is advisory: it produces a retention review list for humans. It does not automatically contact customers or assign offers.
+The model is advisory. It does not contact customers automatically or assign offers. Human review stays in the loop.
 
-## Current Phase
+## What This Project Does
 
-- Phase 1 problem framing: complete
-- Phase 2 architecture: complete and approved
-- Phase 3 implementation: hardening and handoff in progress
+- Validates telecom CSV reports before they reach the model.
+- Trains a churn classifier on structured customer data.
+- Compares the model against a rule-based baseline.
+- Scores new customer snapshots in batch.
+- Produces a ranked retention review queue.
+- Monitors batch drift and prediction shift over time.
+- Exposes a simple Streamlit frontend for CSV upload and scoring.
 
-## Core Artifacts
+## Core Features
 
-- `problem_statement.md`: business and ML framing
-- `architecture.md`: approved MLOps architecture
-- `configs/project.yaml`: project paths, features, metrics, and validation settings
+- **Binary churn prediction** using `churn` as the target.
+- **Recall-focused evaluation** because missing churners is more expensive than reviewing extra customers.
+- **Baseline comparison** against the existing `support_tickets >= 3` rule.
+- **Shared preprocessing** so training and scoring use the same feature logic.
+- **Batch inference** for daily or weekly retention review lists.
+- **Drift monitoring** for key numeric and categorical features.
+- **Verification checks** for saved model bundles and generated reports.
+- **Frontend upload flow** for quick testing without touching the pipeline code.
 
-## MVP Stack
-
-- ZenML local orchestrator
-- Local artifact store
-- MLflow experiment tracking and model registry
-- Great Expectations plus custom validation checks
-- Evidently drift reports after the baseline pipeline works
-
-## Dataset
-
-Initial training data:
-
-```text
-data/telecom_customer_churn_feature_engineering.csv
-```
-
-Target:
+## Project Structure
 
 ```text
-churn
+configs/           Project configuration and feature policy
+data/              Input CSVs and local data folders
+frontend/          Separate Streamlit app for CSV upload and scoring
+outputs/           Generated reports, predictions, and artifacts
+src/               Main MLOps code: validation, features, models, pipelines, monitoring
+tests/             Unit tests for the pipeline and supporting logic
+.github/           CI workflow for syntax and tests
 ```
 
-Positive class:
+## Architecture Summary
+
+The project follows a standard tabular MLOps flow:
+
+1. Data loading and validation
+2. EDA and baseline analysis
+3. Feature engineering and preprocessing
+4. Model training
+5. Offline evaluation
+6. Batch scoring
+7. Drift monitoring
+8. Production verification and handoff
+
+## Model and Data
+
+- **Problem type:** binary classification
+- **Target:** `churn`
+- **Positive class:** `1`
+- **Primary metric:** recall for churners
+- **Baseline:** support-ticket rule with threshold `>= 3`
+- **Initial dataset:** `data/telecom_customer_churn_feature_engineering.csv`
+
+The main training data includes numeric, categorical, date, and text fields. `customer_id` is kept for joins and outputs, but it is not used as a predictive feature.
+
+## Frontend
+
+The `frontend/` folder is a separate Python UI built with Streamlit. It is intentionally isolated so a React or Vue app can replace it later without changing the core MLOps code.
+
+Run it with:
+
+```bash
+cd frontend
+streamlit run app.py
+```
+
+The frontend expects a trained model artifact at:
 
 ```text
-1
+outputs/models/telecom_churn_classifier.joblib
 ```
 
-## Planned Pipelines
+## Running The Project
 
-- Training pipeline: load data, validate, build features, train, evaluate, register.
-- Batch inference pipeline: load approved model, score CSV report, write ranked retention list.
-- Monitoring pipeline: summarize batch health, prediction health, and delayed label performance.
-- Drift pipeline: compare new reports and prediction distributions against training baselines.
-
-## Implemented Pipelines
-
-- Training pipeline: load validated CSV, fit the shared feature pipeline, train logistic regression, save the bundle.
-- Evaluation pipeline: compare the trained model against the support-ticket baseline and write a Markdown report.
-- Batch inference pipeline: score a CSV report, rank customers by churn risk, and persist the review queue.
-- Monitoring pipeline: compare current batch features and predictions against the training reference.
-
-## Hardening
-
-- `src/verification.py` checks that saved model and batch artifacts are loadable and internally consistent.
-- `outputs/reports/production_handoff.md` summarizes the production contract for the current state of the project.
-- `.github/workflows/ci.yml` runs syntax checks and the full test suite on push and pull request.
-- `outputs/reports/production_readiness.md` records the current readiness checklist and residual risks.
-
-## How to Run
+### Main pipeline checks
 
 ```bash
 python -m pytest
 python -m compileall src tests
 ```
 
-The trained model, evaluation report, batch review queue, and drift report are all produced through the pipeline modules under `src/pipelines/`.
+### Train the model
+
+```bash
+python -c "from src.pipelines.train_pipeline import run_training_pipeline; run_training_pipeline()"
+```
+
+### Run evaluation
+
+```bash
+python -c "from src.pipelines.evaluation_pipeline import run_evaluation_pipeline; run_evaluation_pipeline()"
+```
+
+### Run batch scoring
+
+```bash
+python -c "from src.pipelines.batch_inference_pipeline import run_batch_inference_pipeline; run_batch_inference_pipeline()"
+```
+
+### Run drift monitoring
+
+```bash
+python -c "from src.pipelines.monitoring_pipeline import run_monitoring_pipeline; run_monitoring_pipeline()"
+```
+
+## Generated Outputs
+
+- `outputs/reports/eda_report.md`
+- `outputs/reports/model_evaluation.md`
+- `outputs/reports/churn_review_queue.md`
+- `outputs/reports/drift_report.md`
+- `outputs/reports/production_handoff.md`
+- `outputs/reports/production_readiness.md`
+
+These are generated artifacts. The model bundle and scored prediction files are intentionally ignored from version control.
+
+## Technology Stack
+
+- Python
+- ZenML
+- scikit-learn
+- MLflow
+- Great Expectations
+- Evidently
+- Streamlit
+
+## Status
+
+- Problem framing: complete
+- Architecture: complete
+- Core MLOps implementation: complete
+- Frontend: complete
+- GitHub-ready cleanup: complete
+
